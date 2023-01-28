@@ -69,6 +69,22 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
             subscribedToUserIds: updatedSubscribes,
           });
         }
+        const userPosts = await fastify.db.posts.findMany({
+          key: 'userId',
+          equals: user.id,
+        });
+        if (userPosts.length) {
+          for (const userPost of userPosts) {
+            await fastify.db.posts.delete(userPost.id);
+          }
+        }
+        const userProfile = await fastify.db.profiles.findOne({
+          key: 'userId',
+          equals: user.id,
+        });
+        if (userProfile) {
+          await fastify.db.profiles.delete(userProfile.id);
+        }
         return user;
       } catch (err) {
         throw err instanceof NoRequiredEntity

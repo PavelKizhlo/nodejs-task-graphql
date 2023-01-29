@@ -1,5 +1,7 @@
 import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-schema-to-ts';
+import { graphql } from 'graphql';
 import { graphqlBodySchema } from './schema';
+import schema from './graphql-schema/schema';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
@@ -11,7 +13,13 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         body: graphqlBodySchema,
       },
     },
-    async function (request, reply) {}
+    async function (request, reply) {
+      return await graphql({
+        schema,
+        source: String(request.body.query),
+        contextValue: fastify,
+      });
+    }
   );
 };
 

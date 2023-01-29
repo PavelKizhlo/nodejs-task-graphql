@@ -2,13 +2,15 @@ import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-sc
 import { idParamSchema } from '../../utils/reusedSchemas';
 import { createProfileBodySchema, changeProfileBodySchema } from './schema';
 import type { ProfileEntity } from '../../utils/DB/entities/DBProfiles';
-import { NoRequiredEntity } from '../../utils/DB/errors/NoRequireEntity.error';
+import ProfileController from '../../controllers/profileController';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
 ): Promise<void> => {
+  const controller = new ProfileController(fastify);
+
   fastify.get('/', async function (request, reply): Promise<ProfileEntity[]> {
-    return await fastify.db.profiles.findMany();
+    return await controller.getAllProfiles();
   });
 
   fastify.get(
@@ -19,14 +21,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<ProfileEntity> {
-      const profile = await fastify.db.profiles.findOne({
-        key: 'id',
-        equals: request.params.id,
-      });
-      if (!profile) {
-        throw reply.notFound('No profiles with such id');
-      }
-      return profile;
+      return await controller.getProfileById(request.params.id);
     }
   );
 
@@ -38,22 +33,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<ProfileEntity> {
-      const allowedMemberType = await fastify.db.memberTypes.findOne({
-        key: 'id',
-        equals: request.body.memberTypeId,
-      });
-      const userAlreadyHasProfile = await fastify.db.profiles.findOne({
-        key: 'userId',
-        equals: request.body.userId,
-      });
-      if (userAlreadyHasProfile) {
-        throw reply.badRequest('User with this id already have a profile');
-      }
-      if (!allowedMemberType) {
-        throw reply.badRequest("No such member id's");
-      }
-      const profile = fastify.db.profiles.create(request.body);
-      return profile;
+      return await controller.createNewProfile(request.body);
     }
   );
 
@@ -65,14 +45,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<ProfileEntity> {
-      try {
-        const profile = await fastify.db.profiles.delete(request.params.id);
-        return profile;
-      } catch (err) {
-        throw err instanceof NoRequiredEntity
-          ? reply.badRequest('No profiles with such id')
-          : err;
-      }
+      return await controller.deleteProfile(request.params.id);
     }
   );
 
@@ -85,14 +58,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<ProfileEntity> {
-      if (!Object.keys(request.body).length) {
-        throw reply.badRequest('Add fields you want to update');
-      }
-      const updatedProfile = await fastify.db.profiles.change(
-        request.params.id,
-        request.body
-      );
-      return updatedProfile;
+      return await controller.updateProfile(request.params.id, request.body);
     }
   );
 };

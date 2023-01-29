@@ -2,13 +2,15 @@ import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-sc
 import { idParamSchema } from '../../utils/reusedSchemas';
 import { createPostBodySchema, changePostBodySchema } from './schema';
 import type { PostEntity } from '../../utils/DB/entities/DBPosts';
-import { NoRequiredEntity } from '../../utils/DB/errors/NoRequireEntity.error';
+import PostController from '../../controllers/postController';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
 ): Promise<void> => {
+  const controller = new PostController(fastify);
+
   fastify.get('/', async function (request, reply): Promise<PostEntity[]> {
-    return await fastify.db.posts.findMany();
+    return await controller.getAllPosts();
   });
 
   fastify.get(
@@ -19,14 +21,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<PostEntity> {
-      const post = await fastify.db.posts.findOne({
-        key: 'id',
-        equals: request.params.id,
-      });
-      if (!post) {
-        throw reply.notFound('No posts with such id');
-      }
-      return post;
+      return await controller.getPostById(request.params.id);
     }
   );
 
@@ -38,8 +33,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<PostEntity> {
-      const newPost = await fastify.db.posts.create(request.body);
-      return newPost;
+      return await controller.createNewPost(request.body);
     }
   );
 
@@ -51,14 +45,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<PostEntity> {
-      try {
-        const post = await fastify.db.posts.delete(request.params.id);
-        return post;
-      } catch (err) {
-        throw err instanceof NoRequiredEntity
-          ? reply.badRequest('No posts with such id')
-          : err;
-      }
+      return await controller.deletePost(request.params.id);
     }
   );
 
@@ -71,14 +58,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<PostEntity> {
-      if (!Object.keys(request.body).length) {
-        throw reply.badRequest('Add fields you want to update');
-      }
-      const updatedPost = await fastify.db.posts.change(
-        request.params.id,
-        request.body
-      );
-      return updatedPost;
+      return await controller.updatePost(request.params.id, request.body);
     }
   );
 };

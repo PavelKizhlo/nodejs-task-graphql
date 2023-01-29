@@ -6,13 +6,15 @@ import {
   subscribeBodySchema,
 } from './schemas';
 import type { UserEntity } from '../../utils/DB/entities/DBUsers';
-import { NoRequiredEntity } from '../../utils/DB/errors/NoRequireEntity.error';
+import UserController from '../../controllers/userController';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
 ): Promise<void> => {
+  const controller = new UserController(fastify);
+
   fastify.get('/', async function (request, reply): Promise<UserEntity[]> {
-    return await fastify.db.users.findMany();
+    return await controller.getAllUsers();
   });
 
   fastify.get(
@@ -23,14 +25,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
-      const user = await fastify.db.users.findOne({
-        key: 'id',
-        equals: request.params.id,
-      });
-      if (!user) {
-        throw reply.notFound('No users with such id');
-      }
-      return user;
+      return await controller.getUserById(request.params.id);
     }
   );
 
@@ -42,8 +37,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
-      const newUser = await fastify.db.users.create(request.body);
-      return newUser;
+      return await controller.createNewUser(request.body);
     }
   );
 
@@ -55,42 +49,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
-      try {
-        const user = await fastify.db.users.delete(request.params.id);
-        const followers = await fastify.db.users.findMany({
-          key: 'subscribedToUserIds',
-          inArray: user.id,
-        });
-        for (const follower of followers) {
-          const updatedSubscribes = follower.subscribedToUserIds.filter(
-            (id) => id !== user.id
-          );
-          await fastify.db.users.change(follower.id, {
-            subscribedToUserIds: updatedSubscribes,
-          });
-        }
-        const userPosts = await fastify.db.posts.findMany({
-          key: 'userId',
-          equals: user.id,
-        });
-        if (userPosts.length) {
-          for (const userPost of userPosts) {
-            await fastify.db.posts.delete(userPost.id);
-          }
-        }
-        const userProfile = await fastify.db.profiles.findOne({
-          key: 'userId',
-          equals: user.id,
-        });
-        if (userProfile) {
-          await fastify.db.profiles.delete(userProfile.id);
-        }
-        return user;
-      } catch (err) {
-        throw err instanceof NoRequiredEntity
-          ? reply.badRequest('No users with such id')
-          : err;
-      }
+      return await controller.deleteUser(request.params.id);
     }
   );
 
@@ -103,21 +62,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
-      const user = await fastify.db.users.findOne({
-        key: 'id',
-        equals: request.body.userId,
-      });
-      if (!user) {
-        throw reply.badRequest('No users with such id');
-      }
-      const updatedSubscribes = [
-        ...user.subscribedToUserIds,
-        request.params.id,
-      ];
-      const updatedUser = await fastify.db.users.change(user.id, {
-        subscribedToUserIds: updatedSubscribes,
-      });
-      return updatedUser;
+      return await controller.subscribeToUser(
+        request.body.userId,
+        request.params.id
+      );
     }
   );
 
@@ -130,23 +78,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
-      const user = await fastify.db.users.findOne({
-        key: 'id',
-        equals: request.body.userId,
-      });
-      if (!user) {
-        throw reply.notFound('No users with such id');
-      }
-      if (!user.subscribedToUserIds.includes(request.params.id)) {
-        throw reply.badRequest('User is not following received user');
-      }
-      const updatedSubscribes = user.subscribedToUserIds.filter(
-        (id) => id !== request.params.id
+      return await controller.unsubscribeFromUser(
+        request.body.userId,
+        request.params.id
       );
-      const updatedUser = await fastify.db.users.change(user.id, {
-        subscribedToUserIds: updatedSubscribes,
-      });
-      return updatedUser;
     }
   );
 
@@ -159,14 +94,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     async function (request, reply): Promise<UserEntity> {
-      if (!Object.keys(request.body).length) {
-        throw reply.badRequest('Add fields you want to update');
-      }
-      const updatedUser = await fastify.db.users.change(
-        request.params.id,
-        request.body
-      );
-      return updatedUser;
+      return await controller.updateUser(request.params.id, request.body);
     }
   );
 };

@@ -25,6 +25,42 @@ export const addUserMutation = {
   },
 };
 
+export const subscribeToUserMutation = {
+  type: UserType,
+  args: {
+    userId: { type: new GraphQLNonNull(GraphQLID) },
+    subscribedTo: { type: new GraphQLNonNull(GraphQLID) },
+  },
+  resolve: async (
+    source: any,
+    args: { userId: string; subscribeTo: string },
+    context: FastifyInstance
+  ) => {
+    return new UserController(context).subscribeToUser(
+      args.userId,
+      args.subscribeTo
+    );
+  },
+};
+
+export const unsubscribeFromUserMutation = {
+  type: UserType,
+  args: {
+    userId: { type: new GraphQLNonNull(GraphQLID) },
+    unsubscribeFrom: { type: new GraphQLNonNull(GraphQLID) },
+  },
+  resolve: async (
+    source: any,
+    args: { userId: string; unsubscribeFrom: string },
+    context: FastifyInstance
+  ) => {
+    return new UserController(context).unsubscribeFromUser(
+      args.userId,
+      args.unsubscribeFrom
+    );
+  },
+};
+
 export const updateUserMutation = {
   type: UserType,
   args: {

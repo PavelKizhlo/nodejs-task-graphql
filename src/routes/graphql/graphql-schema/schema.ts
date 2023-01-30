@@ -8,6 +8,8 @@ import {
 } from '../graphql-queries/memberTypeQueries';
 import {
   addUserMutation,
+  subscribeToUserMutation,
+  unsubscribeFromUserMutation,
   updateUserMutation,
 } from '../graphql-mutations/userMutations';
 import {
@@ -39,6 +41,8 @@ const RootMutation = new GraphQLObjectType({
   fields: () => ({
     addUser: addUserMutation,
     updateUser: updateUserMutation,
+    subscribeToUser: subscribeToUserMutation,
+    unsubscribeFromUser: unsubscribeFromUserMutation,
     addProfile: addProfileMutation,
     updateProfile: updateProfileMutation,
     addPost: addPostMutation,

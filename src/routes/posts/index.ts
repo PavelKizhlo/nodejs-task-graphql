@@ -2,11 +2,16 @@ import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-sc
 import { idParamSchema } from '../../utils/reusedSchemas';
 import { createPostBodySchema, changePostBodySchema } from './schema';
 import type { PostEntity } from '../../utils/DB/entities/DBPosts';
+import PostController from '../../controllers/postController';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
 ): Promise<void> => {
-  fastify.get('/', async function (request, reply): Promise<PostEntity[]> {});
+  const controller = new PostController(fastify);
+
+  fastify.get('/', async function (request, reply): Promise<PostEntity[]> {
+    return await controller.getAllPosts();
+  });
 
   fastify.get(
     '/:id',
@@ -15,7 +20,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<PostEntity> {}
+    async function (request, reply): Promise<PostEntity> {
+      return await controller.getPostById(request.params.id);
+    }
   );
 
   fastify.post(
@@ -25,7 +32,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         body: createPostBodySchema,
       },
     },
-    async function (request, reply): Promise<PostEntity> {}
+    async function (request, reply): Promise<PostEntity> {
+      return await controller.createNewPost(request.body);
+    }
   );
 
   fastify.delete(
@@ -35,7 +44,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<PostEntity> {}
+    async function (request, reply): Promise<PostEntity> {
+      return await controller.deletePost(request.params.id);
+    }
   );
 
   fastify.patch(
@@ -46,7 +57,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<PostEntity> {}
+    async function (request, reply): Promise<PostEntity> {
+      return await controller.updatePost(request.params.id, request.body);
+    }
   );
 };
 

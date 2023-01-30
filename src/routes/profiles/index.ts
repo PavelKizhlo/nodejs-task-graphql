@@ -2,13 +2,16 @@ import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-sc
 import { idParamSchema } from '../../utils/reusedSchemas';
 import { createProfileBodySchema, changeProfileBodySchema } from './schema';
 import type { ProfileEntity } from '../../utils/DB/entities/DBProfiles';
+import ProfileController from '../../controllers/profileController';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
 ): Promise<void> => {
-  fastify.get('/', async function (request, reply): Promise<
-    ProfileEntity[]
-  > {});
+  const controller = new ProfileController(fastify);
+
+  fastify.get('/', async function (request, reply): Promise<ProfileEntity[]> {
+    return await controller.getAllProfiles();
+  });
 
   fastify.get(
     '/:id',
@@ -17,7 +20,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {}
+    async function (request, reply): Promise<ProfileEntity> {
+      return await controller.getProfileById(request.params.id);
+    }
   );
 
   fastify.post(
@@ -27,7 +32,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         body: createProfileBodySchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {}
+    async function (request, reply): Promise<ProfileEntity> {
+      return await controller.createNewProfile(request.body);
+    }
   );
 
   fastify.delete(
@@ -37,7 +44,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {}
+    async function (request, reply): Promise<ProfileEntity> {
+      return await controller.deleteProfile(request.params.id);
+    }
   );
 
   fastify.patch(
@@ -48,7 +57,9 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
         params: idParamSchema,
       },
     },
-    async function (request, reply): Promise<ProfileEntity> {}
+    async function (request, reply): Promise<ProfileEntity> {
+      return await controller.updateProfile(request.params.id, request.body);
+    }
   );
 };
 

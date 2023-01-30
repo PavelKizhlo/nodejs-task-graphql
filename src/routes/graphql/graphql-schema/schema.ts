@@ -6,6 +6,19 @@ import {
   memberTypeQuery,
   memberTypesQuery,
 } from '../graphql-queries/memberTypeQueries';
+import {
+  addUserMutation,
+  updateUserMutation,
+} from '../graphql-mutations/userMutations';
+import {
+  addProfileMutation,
+  updateProfileMutation,
+} from '../graphql-mutations/profileMutations';
+import {
+  addPostMutation,
+  updatePostMutation,
+} from '../graphql-mutations/postMutations';
+import { updateMemberTypeMutation } from '../graphql-mutations/memberTypeMutations';
 
 const RootQuery = new GraphQLObjectType({
   name: 'RootQuery',
@@ -21,6 +34,20 @@ const RootQuery = new GraphQLObjectType({
   }),
 });
 
+const RootMutation = new GraphQLObjectType({
+  name: 'RootMutation',
+  fields: () => ({
+    addUser: addUserMutation,
+    updateUser: updateUserMutation,
+    addProfile: addProfileMutation,
+    updateProfile: updateProfileMutation,
+    addPost: addPostMutation,
+    updatePost: updatePostMutation,
+    updateMemberType: updateMemberTypeMutation,
+  }),
+});
+
 export default new GraphQLSchema({
   query: RootQuery,
+  mutation: RootMutation,
 });

@@ -121,4 +121,16 @@ export default class UserController {
     }
     return await this.db.users.change(id, userData);
   }
+
+  async getUserSubscribes(ids: string[]): Promise<UserEntity[]> {
+    const users = await this.db.users.findMany();
+    return users.filter((user) => ids.includes(user.id));
+  }
+
+  async getUserFollowers(userId: string): Promise<UserEntity[]> {
+    return await this.db.users.findMany({
+      key: 'subscribedToUserIds',
+      inArray: userId,
+    });
+  }
 }

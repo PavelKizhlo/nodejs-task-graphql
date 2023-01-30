@@ -7,7 +7,7 @@ import {
 import { FastifyInstance } from 'fastify';
 import PostController from '../../../controllers/postController';
 
-const PostType = new GraphQLObjectType({
+export const PostType = new GraphQLObjectType({
   name: 'Post',
   fields: () => ({
     id: { type: GraphQLID },

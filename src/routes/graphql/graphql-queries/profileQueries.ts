@@ -8,7 +8,7 @@ import {
 import { FastifyInstance } from 'fastify';
 import ProfileController from '../../../controllers/profileController';
 
-const ProfileType = new GraphQLObjectType({
+export const ProfileType = new GraphQLObjectType({
   name: 'Profile',
   fields: () => ({
     id: { type: GraphQLID },

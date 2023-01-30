@@ -69,4 +69,15 @@ export default class ProfileController {
     }
     return await this.db.profiles.change(id, profileData);
   }
+
+  async getUsersProfile(userId: string): Promise<ProfileEntity> {
+    const profile = await this.db.profiles.findOne({
+      key: 'userId',
+      equals: userId,
+    });
+    if (!profile) {
+      throw this.httpErrors.notFound("This user haven't profile yet");
+    }
+    return profile;
+  }
 }

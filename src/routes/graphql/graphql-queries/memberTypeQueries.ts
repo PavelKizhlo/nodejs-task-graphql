@@ -7,7 +7,7 @@ import {
 import { FastifyInstance } from 'fastify';
 import MemberTypeController from '../../../controllers/memberTypeController';
 
-const MemberTypeType = new GraphQLObjectType({
+export const MemberTypeType = new GraphQLObjectType({
   name: 'MemberType',
   fields: () => ({
     id: { type: GraphQLString },

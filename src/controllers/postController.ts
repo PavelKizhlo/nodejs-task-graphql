@@ -51,4 +51,8 @@ export default class PostController {
     }
     return await this.db.posts.change(id, postData);
   }
+
+  async getUserPosts(userId: string): Promise<PostEntity[]> {
+    return await this.db.posts.findMany({ key: 'userId', equals: userId });
+  }
 }
